@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Google Sans', sans-serif;
+      background-color: white;
+      padding: 20px;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
+    }
+
+    input, textarea, button {
+      font-size: 14px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      outline: none;
+      padding: 10px;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    input, textarea {
+      background-color: #f4f4f4;
+    }
+
+    button {
+      background-color: #073763;
+      color: white;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #0c5adf;
+    }
+
+    a {
+      color: #1a73e8;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    h2 {
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .full-width {
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <label for="domain">🌐 Site à analyser :</label>
+    <input type="text" id="domain" readonly>
+    <button onclick="copyDomain()">Copier le site</button>
+
+    <p>1. Rendez-vous sur <a href="https://subdomainfinder.c99.nl/" target="_blank">subdomainfinder.c99.nl</a></p>
+
+    <label for="subdomains">2. Collez ici les sous-domaines trouvés :</label>
+    <textarea id="subdomains" rows="6" placeholder="exemple.siteduclient.fr... (un par ligne)"></textarea>
+
+    <button onclick="submitSubdomains()">Enregistrer</button>
+  </div>
+
+  <script>
+    function copyDomain() {
+      const input = document.getElementById("domain");
+      input.select();
+      document.execCommand("copy");
+    }
+
+    function submitSubdomains() {
+      const raw = document.getElementById("subdomains").value;
+      google.script.run.creerFeuilleSousDomaine(raw);
+      google.script.host.close();
+    }
+
+  // Charger le domaine extrait de urlNouveau (via Apps Script)
+  google.script.run.withSuccessHandler(function(domaine) {
+    document.getElementById("domain").value = domaine || "Domaine non trouvé";
+    console.log("[CheckSubdomain] Domaine affiché :", domaine);
+  }).obtenirDomaineNouveau();
+  </script>
+</body>
+</html>
