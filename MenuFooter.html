@@ -156,8 +156,8 @@
         return;
       }
       builderDiv.innerHTML = '';
-      // Menu : avec sous-menus
-      if (currentTab === "menu") {
+      // Menu ou Footer avec sous-menus
+      if (currentTab === "menu" || currentTab === "footer") {
         builder.forEach((item, i) => {
           const line = document.createElement('div');
           line.className = 'builder-item';
@@ -288,54 +288,6 @@
             builderDiv.appendChild(subDiv);
           }
         });
-      } else {
-        // Footer : structure plate
-        builder.forEach((item, i) => {
-          const line = document.createElement('div');
-          line.className = 'builder-item';
-          // Ordre
-          const up = document.createElement('button');
-          up.className = 'order-btn';
-          up.innerHTML = '⬆️';
-          up.title = 'Monter';
-          up.onclick = () => moveItem(i, -1);
-          up.disabled = (i === 0);
-          const down = document.createElement('button');
-          down.className = 'order-btn';
-          down.innerHTML = '⬇️';
-          down.title = 'Descendre';
-          down.onclick = () => moveItem(i, 1);
-          down.disabled = (i === builder.length - 1);
-
-          // Renommage
-          const input = document.createElement('input');
-          input.type = 'text';
-          input.value = item.label || item.Nom || '';
-          input.className = 'rename-input';
-          input.title = 'Libellé affiché';
-          input.onchange = e => { item.label = e.target.value; };
-
-          // URL
-          const url = document.createElement('span');
-          url.className = 'url-span';
-          url.textContent = item.urlRelative || '';
-          url.title = item.URL || '';
-
-          // Supprimer
-          const rm = document.createElement('button');
-          rm.className = 'remove-btn';
-          rm.innerHTML = '🗑️';
-          rm.title = 'Supprimer';
-          rm.onclick = () => removeItem(i);
-
-          line.appendChild(up);
-          line.appendChild(down);
-          line.appendChild(input);
-          line.appendChild(url);
-          line.appendChild(rm);
-
-          builderDiv.appendChild(line);
-        });
       }
     }
 
@@ -358,26 +310,35 @@
           showSubmenuSelector(null, page); // null car page à rattacher, pas bouton
         }
       } else {
-        // Footer : flat
-        if (builderFooter.some(p => p.URL === page.URL)) {
-          document.getElementById('saveStatus').textContent = '⚠️ Déjà présent dans le footer';
-          return;
+        // Footer avec sous-menus
+        if (String(page.Niveau) === "1") {
+          if (builderFooter.some(p => p.URL === page.URL)) {
+            document.getElementById('saveStatus').textContent = '⚠️ Déjà présent dans le footer';
+            return;
+          }
+          builderFooter.push({ ...page, label: page.Nom, children: [] });
+          renderBuilder();
+        } else if (String(page.Niveau) === "2") {
+          if (!builderFooter.length) {
+            document.getElementById('saveStatus').textContent = 'Ajoute d\'abord un élément de niveau 1';
+            return;
+          }
+          showSubmenuSelector(null, page); // currentTab fait pointer sur footer
         }
-        builderFooter.push({ ...page, label: page.Nom });
-        renderBuilder();
       }
     }
 
     // ========== SOUS-MENUS =============
     // Cas bouton ➕ Sous-menu sur un item existant
-    function showSubmenuSelector(parentIdx, pageToAdd) {
-      // Supprime un éventuel ancien popin
-      let oldPopin = document.getElementById("sf-poppin");
-      if (oldPopin) oldPopin.remove();
+      function showSubmenuSelector(parentIdx, pageToAdd) {
+        const builder = (currentTab === 'menu') ? builderMenu : builderFooter;
+        // Supprime un éventuel ancien popin
+        let oldPopin = document.getElementById("sf-poppin");
+        if (oldPopin) oldPopin.remove();
 
       // Cas où on veut rattacher une page niveau 2 à un parent choisi
-      if (pageToAdd) {
-        const parents = builderMenu.map((itm, idx) => `<option value="${idx}">${itm.label || itm.Nom}</option>`).join('');
+        if (pageToAdd) {
+          const parents = builder.map((itm, idx) => `<option value="${idx}">${itm.label || itm.Nom}</option>`).join('');
         const html = `
           <div style="padding:18px 18px 8px 18px;font-family:Arial">
             <b>Ajouter "<span style='color:#073763'>${pageToAdd.Nom}</span>" à quel menu principal ?</b><br><br>
@@ -401,17 +362,17 @@
 
         dlg.onclick = function(e) { e.stopPropagation(); };
 
-        document.getElementById("sf-okBtn").onclick = function() {
-          const pidx = parseInt(document.getElementById("sf-selParent").value, 10);
-          if (!builderMenu[pidx].children) builderMenu[pidx].children = [];
-          if (builderMenu[pidx].children.some(child => child.URL === pageToAdd.URL)) {
-            alert("Déjà présent dans ce sous-menu.");
-            dlg.remove(); return;
-          }
-          builderMenu[pidx].children.push({ ...pageToAdd, label: pageToAdd.Nom });
-          renderBuilder();
-          dlg.remove();
-        };
+          document.getElementById("sf-okBtn").onclick = function() {
+            const pidx = parseInt(document.getElementById("sf-selParent").value, 10);
+            if (!builder[pidx].children) builder[pidx].children = [];
+            if (builder[pidx].children.some(child => child.URL === pageToAdd.URL)) {
+              alert("Déjà présent dans ce sous-menu.");
+              dlg.remove(); return;
+            }
+            builder[pidx].children.push({ ...pageToAdd, label: pageToAdd.Nom });
+            renderBuilder();
+            dlg.remove();
+          };
         document.getElementById("sf-cancelBtn").onclick = function() {
           dlg.remove();
         };
@@ -426,12 +387,12 @@
       }
 
       // Cas bouton "➕ Sous-menu" sur un item principal
-      let parentName = builderMenu[parentIdx].Nom || builderMenu[parentIdx].label;
-      let options = arboPages.filter(p =>
-        String(p.Niveau) === "2" &&
-        (p['Niveau parent'] === parentName) &&
-        !builderMenu[parentIdx].children?.some(child => child.URL === p.URL)
-      );
+        let parentName = builder[parentIdx].Nom || builder[parentIdx].label;
+        let options = arboPages.filter(p =>
+          String(p.Niveau) === "2" &&
+          (p['Niveau parent'] === parentName) &&
+          !builder[parentIdx].children?.some(child => child.URL === p.URL)
+        );
       if (!options.length) {
         alert("Aucune page niveau 2 dispo ou tout a déjà été ajouté comme sous-menu.");
         return;
@@ -462,14 +423,14 @@
 
       dlg.onclick = function(e) { e.stopPropagation(); };
 
-      document.getElementById("sf-okBtn2").onclick = function() {
-        const url = document.getElementById("sf-selSubmenu").value;
-        const page = arboPages.find(p => p.URL === url);
-        if (!builderMenu[parentIdx].children) builderMenu[parentIdx].children = [];
-        builderMenu[parentIdx].children.push({ ...page, label: page.Nom });
-        renderBuilder();
-        dlg.remove();
-      };
+        document.getElementById("sf-okBtn2").onclick = function() {
+          const url = document.getElementById("sf-selSubmenu").value;
+          const page = arboPages.find(p => p.URL === url);
+          if (!builder[parentIdx].children) builder[parentIdx].children = [];
+          builder[parentIdx].children.push({ ...page, label: page.Nom });
+          renderBuilder();
+          dlg.remove();
+        };
       document.getElementById("sf-cancelBtn2").onclick = function() {
         dlg.remove();
       };
@@ -483,20 +444,22 @@
     }
 
     // Supprimer sous-menu
-    function removeSubmenu(parentIdx, subIdx) {
-      builderMenu[parentIdx].children.splice(subIdx, 1);
-      renderBuilder();
-    }
+      function removeSubmenu(parentIdx, subIdx) {
+        const builder = (currentTab === 'menu') ? builderMenu : builderFooter;
+        builder[parentIdx].children.splice(subIdx, 1);
+        renderBuilder();
+      }
 
-    function showSubsubmenuSelector(parentIdx, subIdx) {
-      // parentIdx: index du menu niveau 1, subIdx: index du niveau 2
-      let subitem = builderMenu[parentIdx].children[subIdx];
+      function showSubsubmenuSelector(parentIdx, subIdx) {
+        // parentIdx: index du menu niveau 1, subIdx: index du niveau 2
+        const builder = (currentTab === 'menu') ? builderMenu : builderFooter;
+        let subitem = builder[parentIdx].children[subIdx];
       let parentName = subitem.Nom || subitem.label;
       let options = arboPages.filter(p =>
         String(p.Niveau) === "3" &&
         (p['Niveau parent'] === parentName) &&
-        !(subitem.children || []).some(child => child.URL === p.URL)
-      );
+          !(subitem.children || []).some(child => child.URL === p.URL)
+        );
       if (!options.length) {
         alert("Aucune page niveau 3 dispo ou tout a déjà été ajouté comme sous-menu.");
         return;
@@ -531,9 +494,9 @@
 
       document.getElementById("sf-okBtn3").onclick = function() {
         const url = document.getElementById("sf-selSubsubmenu").value;
-        const page = arboPages.find(p => p.URL === url);
-        if (!subitem.children) subitem.children = [];
-        subitem.children.push({ ...page, label: page.Nom });
+          const page = arboPages.find(p => p.URL === url);
+          if (!subitem.children) subitem.children = [];
+          subitem.children.push({ ...page, label: page.Nom });
         renderBuilder();
         dlg.remove();
       };
@@ -549,10 +512,11 @@
       }
     }
 
-    function removeSubsubmenu(parentIdx, subIdx, subsubIdx) {
-      builderMenu[parentIdx].children[subIdx].children.splice(subsubIdx, 1);
-      renderBuilder();
-    }
+      function removeSubsubmenu(parentIdx, subIdx, subsubIdx) {
+        const builder = (currentTab === 'menu') ? builderMenu : builderFooter;
+        builder[parentIdx].children[subIdx].children.splice(subsubIdx, 1);
+        renderBuilder();
+      }
 
     // Supprimer
     function removeItem(idx) {
@@ -605,17 +569,35 @@
             }))
           }))
         }));
-      } else {
-        exportArr = builder.map((item, order) => ({
-          label: item.label || item.Nom,
-          url: item.URL,
-          ordre: order + 1,
-          niveau: item.Niveau || '',
-          parent: item['Niveau parent'] || '',
-          filAriane: item['Fil d\'Ariane'] || '',
-          type: "footer"
-        }));
-      }
+        } else {
+          exportArr = builder.map((item, order) => ({
+            label: item.label || item.Nom,
+            url: item.URL,
+            ordre: order + 1,
+            niveau: item.Niveau || '',
+            parent: item['Niveau parent'] || '',
+            filAriane: item['Fil d\'Ariane'] || '',
+            type: "footer",
+            children: (item.children || []).map((c, idx) => ({
+              label: c.label || c.Nom,
+              url: c.URL,
+              ordre: idx+1,
+              niveau: c.Niveau || '',
+              parent: c['Niveau parent'] || '',
+              filAriane: c['Fil d\'Ariane'] || '',
+              type: "footer_submenu",
+              children: (c.children || []).map((cc, ccidx) => ({
+                label: cc.label || cc.Nom,
+                url: cc.URL,
+                ordre: ccidx+1,
+                niveau: cc.Niveau || '',
+                parent: cc['Niveau parent'] || '',
+                filAriane: cc['Fil d\'Ariane'] || '',
+                type: "footer_submenu3"
+              }))
+            }))
+          }));
+        }
       document.getElementById('saveStatus').textContent = 'Enregistrement...';
       google.script.run
         .withSuccessHandler(() => {
