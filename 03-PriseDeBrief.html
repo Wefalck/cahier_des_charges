@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+      body {
+        font-family: 'Google Sans', sans-serif;
+        background-color: white;
+        padding: 20px;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 500px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        align-items: center;
+      }
+
+      label {
+        font-weight: 500;
+        font-size: 14px;
+        align-self: flex-start;
+      }
+
+      input, select, button {
+        padding: 10px;
+        font-size: 14px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        background-color: #f4f4f4;
+        outline: none;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+      }
+
+      button {
+        background-color: #1a73e8;
+        color: white;
+        font-weight: 500;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+
+      button:hover {
+        background-color: #0c5adf;
+      }
+
+      h2 {
+        margin-top: 15px;
+        margin-bottom: 15px;
+        text-align: center;
+        font-weight: 500;
+      }
+
+      hr {
+        border: none;
+        border-top: 1px solid #ddd;
+        width: 100%;
+      }
+
+      .alert-message {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeeba;
+        padding: 10px;
+        border-radius: 5px;
+        width: 100%;
+        text-align: center;
+        font-size: 14px;
+      }
+
+      /* Blocs Domaine Actuel et URL Actuel (affichés ou masqués dynamiquement) */
+      .blocDomaineActuel, .blocUrlActuel {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+       .sous-titre {
+        align-self: flex-start;
+        margin: 10px 0 5px 0;
+        font-weight: 500;
+        font-size: 16px;
+      }
+
+      #btnValider.validated {
+        background-color: #28a745 !important; /* Vert */
+        color: white;
+        position: relative;
+      }
+
+      #btnValider.validated::before {
+        position: absolute;
+        left: 10px;
+        font-size: 16px;
+      }
+
+    </style>
+
+</head>
+<body>
+
+  <h2>Informations principales</h2>
+
+  <div class="container">
+
+    <div class="alert-message">
+      ⚠️ As-tu pensé à faire une copie du template ?
+    </div>
+
+    <!-- Client -->
+    <label for="client">👤 Client :</label>
+    <input type="text" id="client" placeholder="Nom du client">
+
+    <!-- Type de projet -->
+    <label for="typeProjet">📄 Type de projet :</label>
+    <select id="typeProjet" onchange="gererTypeProjet()">
+      <option value="">-- Choisissez une option --</option>
+      <option value="Refonte">Refonte</option>
+      <option value="Création">Création</option>
+    </select>
+
+    <!-- Section Infrastructure -->
+    <h2>Infrastructure</h2>
+
+    <label for="registrar">🏢 Registrar :</label>
+    <input type="text" id="registrar" placeholder="Nom du registrar">
+
+    <label for="hebergeur">💻 Hébergeur :</label>
+    <input type="text" id="hebergeur" placeholder="Nom de l'hébergeur">
+
+    <label for="serveur">🖥️ Serveur :</label>
+    <select id="serveur" onchange="gererAutreChamp('serveur', 'autreServeurContainer')">
+      <option value="">-- Choisissez une option --</option>
+      <option value="Apache">Apache</option>
+      <option value="Nginx">Nginx</option>
+      <option value="IIS">IIS</option>
+      <option value="Autre">Autre</option>
+    </select>
+
+    <div id="autreServeurContainer" style="display:none; width:100%;">
+      <label for="autreServeur">📦 Autre Serveur :</label>
+      <input type="text" id="autreServeur" placeholder="Nom du serveur">
+    </div>
+
+    <!-- Section CMS -->
+    <h2>CMS</h2>
+
+    <label for="cmsActuel" class="blocCmsActuel">🧱 Actuel :</label>
+    <select id="cmsActuel" class="blocCmsActuel" onchange="gererAutreChamp('cmsActuel', 'autreCmsActuelContainer')">
+      <option value="">-- Choisissez une option --</option>
+      <option value="Wordpress">Wordpress</option>
+      <option value="Prestashop">Prestashop</option>
+      <option value="Magento">Magento</option>
+      <option value="Propriétaire">Propriétaire</option>
+      <option value="Shopify">Shopify</option>
+      <option value="Drupal">Drupal</option>
+      <option value="Autre">Autre</option>
+    </select>
+
+    <div id="autreCmsActuelContainer" class="blocCmsActuel" style="display:none; width:100%;">
+      <label for="autreCmsActuel">📦 Autre CMS actuel :</label>
+      <input type="text" id="autreCmsActuel" placeholder="Nom du CMS actuel">
+    </div>
+
+    <label for="nouveauCms">🧱 Nouveau :</label>
+    <select id="nouveauCms" onchange="gererAutreChamp('nouveauCms', 'autreNouveauCmsContainer')">
+      <option value="">-- Choisissez une option --</option>
+      <option value="Pas de changement">Pas de changement</option>
+      <option value="Wordpress">Wordpress</option>
+      <option value="Prestashop">Prestashop</option>
+      <option value="Magento">Magento</option>
+      <option value="Propriétaire">Propriétaire</option>
+      <option value="Shopify">Shopify</option>
+      <option value="Drupal">Drupal</option>
+      <option value="Autre">Autre</option>
+    </select>
+
+    <div id="autreNouveauCmsContainer" style="display:none; width:100%;">
+      <label for="autreNouveauCms">📦 Autre Nouveau CMS :</label>
+      <input type="text" id="autreNouveauCms" placeholder="Nom du nouveau CMS">
+    </div>
+
+    <!-- Section Domaine -->
+    <h2>Domaine</h2>
+
+    <!-- Domaine Actuel -->
+    <h3 class="blocDomaineActuel sous-titre">Actuel</h3>
+
+    <label for="domaineActuel" class="blocDomaineActuel">🌐 Domaine :</label>
+    <input type="text" id="domaineActuel" class="blocDomaineActuel" placeholder="exemple.com">
+
+    <label for="sousDomaineActuel" class="blocDomaineActuel">🔗 Sous-domaine :</label>
+    <select id="sousDomaineActuel" class="blocDomaineActuel" onchange="gererAutreChamp('sousDomaineActuel', 'autreSousDomaineActuelContainer')">
+      <option value="">-- Choisissez une option --</option>
+      <option value="Sans">Sans</option>
+      <option value="www">www</option>
+      <option value="Autre">Autre</option>
+    </select>
+
+    <div id="autreSousDomaineActuelContainer" class="blocDomaineActuel" style="display:none; width:100%;">
+      <label for="autreSousDomaineActuel">📦 Autre Sous-domaine actuel :</label>
+      <input type="text" id="autreSousDomaineActuel" placeholder="Nom du sous-domaine">
+    </div>
+
+    <!-- Domaine Nouveau -->
+    <h3 class="sous-titre">Nouveau</h3>
+
+    <label for="domaineNouveau">🌐 Domaine :</label>
+    <select id="domaineNouveau" onchange="gererAutreChamp('domaineNouveau', 'autreDomaineNouveauContainer')">
+      <option value="">-- Choisissez une option --</option>
+      <option value="Pas de changement">Pas de changement</option>
+      <option value="Autre">Autre</option>
+    </select>
+
+    <div id="autreDomaineNouveauContainer" style="display:none; width:100%;">
+      <label for="autreDomaineNouveau">📦 Autre Domaine :</label>
+      <input type="text" id="autreDomaineNouveau" placeholder="Nouveau domaine">
+    </div>
+
+    <label for="sousDomaineNouveau">🔗 Sous-domaine :</label>
+    <select id="sousDomaineNouveau" onchange="gererAutreChamp('sousDomaineNouveau', 'autreSousDomaineNouveauContainer')">
+      <option value="">-- Choisissez une option --</option>
+      <option value="Pas de changement">Pas de changement</option>
+      <option value="Sans">Sans</option>
+      <option value="www">www</option>
+      <option value="Autre">Autre</option>
+    </select>
+
+    <div id="autreSousDomaineNouveauContainer" style="display:none; width:100%;">
+      <label for="autreSousDomaineNouveau">📦 Autre Sous-domaine Nouveau :</label>
+      <input type="text" id="autreSousDomaineNouveau" placeholder="Nouveau sous-domaine">
+    </div>
+
+    <!-- Section 5 - URL -->
+    <h2>URL</h2>
+
+    <h3 class="blocUrlActuel sous-titre">Actuel</h3>
+
+    <label for="finUrlActuel" class="blocUrlActuel">🔗 Fin des URL :</label>
+    <select id="finUrlActuel" class="blocUrlActuel" onchange="gererAutreChamp('finUrlActuel', 'autreFinUrlActuelContainer')">
+      <option value="">-- Choisissez une option --</option>
+      <option value="Sans /">Sans /</option>
+      <option value="Avec /">Avec /</option>
+      <option value=".html">.html</option>
+      <option value="Autre">Autre</option>
+    </select>
+
+    <div id="autreFinUrlActuelContainer" class="blocUrlActuel" style="display:none; width:100%;">
+      <label for="autreFinUrlActuel">📦 Autre fin d'URL :</label>
+      <input type="text" id="autreFinUrlActuel" placeholder="Autre fin d'URL">
+    </div>
+
+    <label for="sousRepertoireActuel" class="blocUrlActuel">📂 Sous-répertoire :</label>
+    <select id="sousRepertoireActuel" class="blocUrlActuel">
+      <option value="">-- Choisissez une option --</option>
+      <option value="Oui">Oui</option>
+      <option value="Non">Non</option>
+    </select>
+
+    <h3 class="sous-titre">Nouveau</h3>
+
+    <label for="finUrlNouveau">🔗 Fin des URL :</label>
+    <select id="finUrlNouveau" onchange="gererAutreChamp('finUrlNouveau', 'autreFinUrlNouveauContainer')">
+      <option value="">-- Choisissez une option --</option>
+      <option value="Pas de changement">Pas de changement</option>
+      <option value="Sans /">Sans /</option>
+      <option value="Avec /">Avec /</option>
+      <option value=".html">.html</option>
+      <option value="Autre">Autre</option>
+    </select>
+
+    <div id="autreFinUrlNouveauContainer" style="display:none; width:100%;">
+      <label for="autreFinUrlNouveau">📦 Autre fin d'URL nouveau :</label>
+      <input type="text" id="autreFinUrlNouveau" placeholder="Nouvelle fin d'URL">
+    </div>
+
+    <label for="sousRepertoireNouveau">📂 Sous-répertoire :</label>
+    <select id="sousRepertoireNouveau">
+      <option value="">-- Choisissez une option --</option>
+      <option value="Oui">Oui</option>
+      <option value="Non">Non</option>
+    </select>
+
+
+    <!-- Section 6 - Préprod -->
+    <h2>Préprod</h2>
+
+    <div class="alert-message">
+      ⚠️ <b>Ajoute la préprod sur <a href="https://app.oseox.com/oa_index.php" target="_blank" style="color:#0b5394;text-decoration:underline;">OSEOX</a></b>
+    </div>
+
+    <label for="urlPreprod">🌐 URL préprod :</label>
+    <input type="text" id="urlPreprod" placeholder="https://preprod.exemple.com">
+
+    <label for="blocagePreprod">🔒 Blocage préprod :</label>
+    <select id="blocagePreprod" onchange="gererAutreChamp('blocagePreprod', 'autreBlocagePreprodContainer')">
+      <option value="">-- Choisissez une option --</option>
+      <option value="IP">IP</option>
+      <option value="Mot de passe">Mot de passe</option>
+      <option value="Robots.txt">Robots.txt</option>
+      <option value="Autre">Autre</option>
+    </select>
+
+    <div id="autreBlocagePreprodContainer" style="display:none; width:100%;">
+      <label for="autreBlocagePreprod">📦 Autre blocage :</label>
+      <input type="text" id="autreBlocagePreprod" placeholder="Type de blocage">
+    </div>
+
+    <label for="doubleSecurite">🔐 Double sécurité :</label>
+    <select id="doubleSecurite" onchange="gererAutreChamp('doubleSecurite', 'autreDoubleSecuriteContainer')">
+      <option value="">-- Choisissez une option --</option>
+      <option value="Robots.txt">Robots.txt</option>
+      <option value="Noindex">Noindex</option>
+      <option value="Non">Pas prévue</option>
+      <option value="Autre">Autre</option>
+    </select>
+
+    <div id="autreDoubleSecuriteContainer" style="display:none; width:100%;">
+      <label for="autreDoubleSecurite">📦 Autre sécurité :</label>
+      <input type="text" id="autreDoubleSecurite" placeholder="Autre sécurité">
+    </div>
+
+    <!-- Section 7 - CDN -->
+    <h2>CDN</h2>
+
+    <label for="utilisationCdn">🌐 Utilisation CDN :</label>
+    <select id="utilisationCdn">
+      <option value="">-- Choisissez une option --</option>
+      <option value="Oui">Oui</option>
+      <option value="Non">Non</option>
+    </select>
+
+    <label for="cdn">🌍 CDN :</label>
+    <select id="cdn" onchange="gererAutreChamp('cdn', 'autreCdnContainer')">
+      <option value="">-- Choisissez une option --</option>
+      <option value="CloudFlare">CloudFlare</option>
+      <option value="Google Cloud">Google Cloud</option>
+      <option value="AWS">AWS</option>
+      <option value="Autre">Autre</option>
+    </select>
+
+    <div id="autreCdnContainer" style="display:none; width:100%;">
+      <label for="autreCdn">📦 Autre CDN :</label>
+      <input type="text" id="autreCdn" placeholder="Autre CDN">
+    </div>
+
+    <!-- Section 8 - Fonctionnalités -->
+    <h2>Fonctionnalités</h2>
+
+    <label for="multilingue">🌍 Multilingue :</label>
+    <select id="multilingue">
+      <option value="">-- Choisissez une option --</option>
+      <option value="Oui">Oui</option>
+      <option value="Non">Non</option>
+    </select>
+
+    <label for="seoFiltres">🔎 Utilisation SEO des filtres :</label>
+    <select id="seoFiltres">
+      <option value="">-- Choisissez une option --</option>
+      <option value="Oui">Oui</option>
+      <option value="Non">Non</option>
+    </select>
+
+    <label for="video">🎥 Vidéo :</label>
+    <select id="video">
+      <option value="">-- Choisissez une option --</option>
+      <option value="Oui">Oui</option>
+      <option value="Non">Non</option>
+    </select>
+
+    <label for="partageSocial">📢 Partage réseaux sociaux :</label>
+    <select id="partageSocial">
+      <option value="">-- Choisissez une option --</option>
+      <option value="Oui">Oui</option>
+      <option value="Non">Non</option>
+    </select>
+
+    <!-- Section 9 - Acteurs -->
+    <h2>Acteurs</h2>
+
+    <label for="chefSeo">👨‍💼 Chef de projet SEO :</label>
+    <input type="text" id="chefSeo" placeholder="Nom du chef SEO">
+
+    <label for="chefWeb">👨‍💻 Chef de projet web :</label>
+    <input type="text" id="chefWeb" placeholder="Nom du chef Web">
+
+    <label for="developpeur">💻 Développeur :</label>
+    <input type="text" id="developpeur" placeholder="Nom du développeur">
+
+    <label for="adminServeur">🛠️ Admin serveur :</label>
+    <input type="text" id="adminServeur" placeholder="Nom de l'admin serveur">
+
+    <label for="graphiste">🎨 Graphiste :</label>
+    <input type="text" id="graphiste" placeholder="Nom du graphiste">
+
+    <label for="integrateurMaquette">🖌️ Intégrateur maquette :</label>
+    <input type="text" id="integrateurMaquette" placeholder="Nom de l'intégrateur maquette">
+
+    <label for="integrateurContenu">📝 Intégrateur contenu :</label>
+    <input type="text" id="integrateurContenu" placeholder="Nom de l'intégrateur contenu">
+
+    <label for="integrateurSeo">📈 Intégrateur balise SEO :</label>
+    <input type="text" id="integrateurSeo" placeholder="Nom de l'intégrateur SEO">
+
+    <label for="gestionDomaine">🔗 Gestion du domaine :</label>
+    <input type="text" id="gestionDomaine" placeholder="Responsable domaine">
+
+    <label for="gestionHebergement">💾 Gestion de l'hébergement :</label>
+    <input type="text" id="gestionHebergement" placeholder="Responsable hébergement">
+
+    <label for="gestionRedirections">🔄 Gestion des redirections :</label>
+    <input type="text" id="gestionRedirections" placeholder="Responsable redirections">
+
+    <hr>
+
+    <button id="btnValider" onclick="validerBrief()">Valider</button>
+
+  </div>
+
+  <script>
+    function gererAutreChamp(selectId, containerId) {
+      const valeur = document.getElementById(selectId).value;
+      const autreContainer = document.getElementById(containerId);
+
+      if (valeur === 'Autre') {
+        autreContainer.style.display = 'flex';
+      } else {
+        autreContainer.style.display = 'none';
+      }
+    }
+
+    function validerBrief() {
+    // Vérification avant de construire les données
+
+    const domaineActuel = document.getElementById('domaineActuel')?.value.trim();
+    const domaineNouveau = document.getElementById('domaineNouveau')?.value.trim();
+    const urlPreprod = document.getElementById('urlPreprod')?.value.trim();
+
+    const donnees = {
+      // Section Informations principales
+      client: document.getElementById('client').value.trim(),
+      typeProjet: document.getElementById('typeProjet').value.trim(),
+
+      // Section Infrastructure
+      registrar: document.getElementById('registrar')?.value.trim(),
+      hebergeur: document.getElementById('hebergeur')?.value.trim(),
+      serveur: document.getElementById('serveur').value === "Autre" ? document.getElementById('autreServeur').value.trim() : document.getElementById('serveur').value.trim(),
+
+      // Section CMS
+      cmsActuel: document.getElementById('cmsActuel').value === "Autre" ? document.getElementById('autreCmsActuel').value.trim() : document.getElementById('cmsActuel').value.trim(),
+      nouveauCms: document.getElementById('nouveauCms').value === "Autre" ? document.getElementById('autreNouveauCms').value.trim() : document.getElementById('nouveauCms').value.trim(),
+
+      // Section Domaine
+      domaineActuel: document.getElementById('domaineActuel').value.trim(),
+      sousDomaineActuel: document.getElementById('sousDomaineActuel').value === "Autre" ? document.getElementById('autreSousDomaineActuel').value.trim() : document.getElementById('sousDomaineActuel').value.trim(),
+      domaineNouveau: document.getElementById('domaineNouveau').value === "Autre" ? document.getElementById('autreDomaineNouveau').value.trim() : document.getElementById('domaineNouveau').value.trim(),
+      sousDomaineNouveau: document.getElementById('sousDomaineNouveau').value === "Autre" ? document.getElementById('autreSousDomaineNouveau').value.trim() : document.getElementById('sousDomaineNouveau').value.trim(),
+
+      // Section URL
+      finUrlActuel: document.getElementById('finUrlActuel').value === "Autre" ? document.getElementById('autreFinUrlActuel').value.trim() : document.getElementById('finUrlActuel').value.trim(),
+      sousRepertoireActuel: document.getElementById('sousRepertoireActuel').value.trim(),
+      finUrlNouveau: document.getElementById('finUrlNouveau').value === "Autre" ? document.getElementById('autreFinUrlNouveau').value.trim() : document.getElementById('finUrlNouveau').value.trim(),
+      sousRepertoireNouveau: document.getElementById('sousRepertoireNouveau').value.trim(),
+
+      // Section Préprod
+      urlPreprod: document.getElementById('urlPreprod').value.trim(),
+      blocagePreprod: document.getElementById('blocagePreprod').value === "Autre" ? document.getElementById('autreBlocagePreprod').value.trim() : document.getElementById('blocagePreprod').value.trim(),
+      doubleSecurite: document.getElementById('doubleSecurite').value === "Autre" ? document.getElementById('autreDoubleSecurite').value.trim() : document.getElementById('doubleSecurite').value.trim(),
+
+      // Section CDN
+      utilisationCdn: document.getElementById('utilisationCdn').value.trim(),
+      cdn: document.getElementById('cdn').value === "Autre" ? document.getElementById('autreCdn').value.trim() : document.getElementById('cdn').value.trim(),
+
+      // Section Fonctionnalités
+      multilingue: document.getElementById('multilingue').value.trim(),
+      seoFiltres: document.getElementById('seoFiltres').value.trim(),
+      video: document.getElementById('video').value.trim(),
+      partageSocial: document.getElementById('partageSocial').value.trim(),
+
+      // Section Acteurs
+      chefSeo: document.getElementById('chefSeo').value.trim(),
+      chefWeb: document.getElementById('chefWeb').value.trim(),
+      developpeur: document.getElementById('developpeur').value.trim(),
+      adminServeur: document.getElementById('adminServeur').value.trim(),
+      graphiste: document.getElementById('graphiste').value.trim(),
+      integrateurMaquette: document.getElementById('integrateurMaquette').value.trim(),
+      integrateurContenu: document.getElementById('integrateurContenu').value.trim(),
+      integrateurSeo: document.getElementById('integrateurSeo').value.trim(),
+      gestionDomaine: document.getElementById('gestionDomaine').value.trim(),
+      gestionHebergement: document.getElementById('gestionHebergement').value.trim(),
+      gestionRedirections: document.getElementById('gestionRedirections').value.trim(),
+    };
+
+    console.log("[INFO] Données envoyées :", donnees);
+
+    google.script.run
+      .withSuccessHandler(() => {
+        console.log("[INFO] Données enregistrées avec succès.");
+
+        const btn = document.getElementById("btnValider");
+        btn.classList.add("validated");
+        btn.innerText = "✅ Validé !";
+        btn.disabled = true;
+
+        setTimeout(() => {
+          google.script.host.close();
+        }, 1500);
+      })
+      .enregistrerPriseDeBrief(donnees);
+
+  }
+
+    function gererTypeProjet() {
+    const typeProjet = document.getElementById('typeProjet').value;
+
+    const cmsActuelElements = document.querySelectorAll('.blocCmsActuel');
+    const domaineActuelElements = document.querySelectorAll('.blocDomaineActuel');
+    const urlActuelElements = document.querySelectorAll('.blocUrlActuel');
+
+    const selectsAjustables = ['nouveauCms', 'domaineNouveau', 'sousDomaineNouveau', 'finUrlNouveau', 'sousRepertoireNouveau'];
+
+    if (typeProjet === 'Création') {
+      // Cas Création : cacher CMS Actuel + Domaine Actuel + URL Actuel
+      cmsActuelElements.forEach(el => el.style.display = 'none');
+      domaineActuelElements.forEach(el => el.style.display = 'none');
+      urlActuelElements.forEach(el => el.style.display = 'none');
+
+      // Supprimer l'option "Pas de changement" des listes concernées
+      selectsAjustables.forEach(id => supprimerOptionPasDeChangement(id));
+
+      console.log("[INFO] Formulaire adapté pour 'Création' : Blocs CMS, Domaine, URL Actuel masqués, options ajustées.");
+    } else if (typeProjet === 'Refonte') {
+      // Cas Refonte : afficher CMS Actuel + Domaine Actuel + URL Actuel
+      cmsActuelElements.forEach(el => el.style.display = 'flex');
+      domaineActuelElements.forEach(el => el.style.display = 'flex');
+      urlActuelElements.forEach(el => el.style.display = 'flex');
+
+      // Ajouter l'option "Pas de changement" aux listes concernées
+      selectsAjustables.forEach(id => ajouterOptionPasDeChangement(id));
+
+      console.log("[INFO] Formulaire adapté pour 'Refonte' : Blocs CMS, Domaine, URL Actuel affichés, options ajustées.");
+    }
+
+    // Après avoir affiché les blocs en Refonte
+    gererAutreChamp('cmsActuel', 'autreCmsActuelContainer');
+    gererAutreChamp('sousDomaineActuel', 'autreSousDomaineActuelContainer');
+    gererAutreChamp('finUrlActuel', 'autreFinUrlActuelContainer');
+  }
+
+  function supprimerOptionPasDeChangement(selectId) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+    
+    const option = Array.from(select.options).find(opt => opt.value === 'Pas de changement');
+    if (option) {
+      select.remove(option.index);
+      console.log(`[INFO] Option "Pas de changement" supprimée dans #${selectId}`);
+    }
+  }
+
+  function ajouterOptionPasDeChangement(selectId) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+
+    const existe = Array.from(select.options).some(opt => opt.value === 'Pas de changement');
+    if (!existe) {
+      const option = document.createElement('option');
+      option.value = 'Pas de changement';
+      option.text = 'Pas de changement';
+      select.insertBefore(option, select.options[1]); // Après l'option vide "-- Choisissez une option --"
+      console.log(`[INFO] Option "Pas de changement" ajoutée dans #${selectId}`);
+    }
+  }
+
+    function preRemplirForm(donnees) {
+  const comparaisons = [
+    ["cmsActuel", "nouveauCms"],
+    ["domaineActuel", "domaineNouveau"],
+    ["sousDomaineActuel", "sousDomaineNouveau"],
+    ["finUrlActuel", "finUrlNouveau"],
+  ];
+
+  // Appliquer tous les champs
+  for (const [champ, valeur] of Object.entries(donnees)) {
+    const element = document.getElementById(champ);
+    if (!element) continue;
+
+    // Cas 1 : champ comparé avec sa version "actuelle"
+    const comparaison = comparaisons.find(([actuel, nouveau]) => nouveau === champ);
+    if (comparaison) {
+      const [champActuel, champNouveau] = comparaison;
+    const valActuel = (donnees[champActuel] || "").trim();
+    const valNouveau = (donnees[champNouveau] || "").trim();
+
+    if (valActuel && valNouveau && valActuel === valNouveau) {
+      ensureOptionExists(element, "Pas de changement");
+      element.value = "Pas de changement";
+      continue;
+    }
+
+    }
+
+    // Cas 2 : "Pas de changement" explicite, on remet l'option si absente
+    if (valeur === "Pas de changement" && element.tagName === "SELECT") {
+      ensureOptionExists(element, "Pas de changement");
+    }
+
+    // Affectation de la valeur
+    const estSelect = element.tagName === "SELECT";
+    const options = estSelect ? Array.from(element.options).map(opt => opt.value) : [];
+
+    if (estSelect && valeur && !options.includes(valeur)) {
+      element.value = "Autre";
+      const autreChampId = getAutreInputId(champ);
+      const autreChamp = document.getElementById(autreChampId);
+      if (autreChamp) {
+        gererAutreChamp(champ, getAutreContainerId(champ));
+        autreChamp.value = valeur;
+      }
+    } else {
+      element.value = valeur || "";
+    }
+
+
+    // Cas 3 : valeur "Autre" sélectionnée → afficher le champ texte associé
+    if (valeur === "Autre" && getAutreContainerId(champ)) {
+      gererAutreChamp(champ, getAutreContainerId(champ));
+      const autreChampId = getAutreInputId(champ);
+      const autreChamp = document.getElementById(autreChampId);
+      if (autreChamp && donnees[autreChampId]) {
+        autreChamp.value = donnees[autreChampId];
+      }
+    }
+  }
+
+  gererTypeProjet();
+}
+
+function ensureOptionExists(selectElement, value) {
+  const exists = Array.from(selectElement.options).some(opt => opt.value === value);
+  if (!exists) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.text = value;
+    selectElement.insertBefore(option, selectElement.options[1]);
+  }
+}
+
+// Donne le conteneur HTML pour le champ "Autre"
+function getAutreContainerId(champ) {
+  return {
+    serveur: 'autreServeurContainer',
+    cmsActuel: 'autreCmsActuelContainer',
+    nouveauCms: 'autreNouveauCmsContainer',
+    sousDomaineActuel: 'autreSousDomaineActuelContainer',
+    sousDomaineNouveau: 'autreSousDomaineNouveauContainer',
+    domaineNouveau: 'autreDomaineNouveauContainer',
+    finUrlActuel: 'autreFinUrlActuelContainer',
+    finUrlNouveau: 'autreFinUrlNouveauContainer',
+    blocagePreprod: 'autreBlocagePreprodContainer',
+    doubleSecurite: 'autreDoubleSecuriteContainer',
+    cdn: 'autreCdnContainer'
+  }[champ];
+}
+
+// Donne le champ <input> correspondant à un champ "Autre"
+function getAutreInputId(champ) {
+  return {
+    serveur: 'autreServeur',
+    cmsActuel: 'autreCmsActuel',
+    nouveauCms: 'autreNouveauCms',
+    sousDomaineActuel: 'autreSousDomaineActuel',
+    sousDomaineNouveau: 'autreSousDomaineNouveau',
+    domaineNouveau: 'autreDomaineNouveau',
+    finUrlActuel: 'autreFinUrlActuel',
+    finUrlNouveau: 'autreFinUrlNouveau',
+    blocagePreprod: 'autreBlocagePreprod',
+    doubleSecurite: 'autreDoubleSecurite',
+    cdn: 'autreCdn'
+  }[champ];
+}
+
+
+
+    window.onload = function() {
+  google.script.run.withSuccessHandler(preRemplirForm).getDonneesPriseDeBrief();
+}
+
+    </script>
+
+</body>
+</html>
