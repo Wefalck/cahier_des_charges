@@ -2,7 +2,7 @@
 <html>
 <head>
   <base target="_top">
-  <meta charset="UTF-8">
+  <meta charset="UTF-M-8">
   <title>Builder Menu & Footer</title>
   <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
@@ -60,7 +60,6 @@
         <label><input type="radio" name="level" value="1" checked onchange="renderArboList()">Niveau 1</label>
         <label><input type="radio" name="level" value="2" onchange="renderArboList()">Niveau 2</label>
         <label><input type="radio" name="level" value="3" onchange="renderArboList()">Niveau 3</label>
-
         <label><input type="radio" name="level" value="all" onchange="renderArboList()">Tous</label>
       </div>
       <div class="search">
@@ -88,11 +87,38 @@
 
     // ============ INIT ==============
     window.onload = function () {
-      google.script.run.withSuccessHandler(function (pages) {
-        arboPages = Array.isArray(pages) ? pages : [];
+      /*
+       * Au chargement, on récupère à la fois la liste des pages de l'arborescence
+       * et la dernière structure de menu/footer sauvegardée.
+       */
+      google.script.run.withSuccessHandler(function (initialData) {
+        arboPages = Array.isArray(initialData.arboPages) ? initialData.arboPages : [];
+        const pageMap = new Map(arboPages.map(p => [p.URL, p]));
+
+        // Fonction pour "réhydrater" les données sauvegardées avec les données complètes de l'arborescence
+        function hydrateState(items) {
+          if (!items || items.length === 0) return [];
+          return items.map(item => {
+            const originalPage = pageMap.get(item.url);
+            // On fusionne l'objet d'origine et l'objet sauvegardé.
+            // Les propriétés sauvegardées (label, nonClickable) écrasent celles d'origine.
+            const hydratedItem = { ...originalPage, ...item };
+            
+            if (item.children && item.children.length > 0) {
+              hydratedItem.children = hydrateState(item.children);
+            }
+            return hydratedItem;
+          }).filter(Boolean); // On retire les items qui n'existeraient plus dans l'arborescence
+        }
+        
+        if (initialData.savedState) {
+            builderMenu = hydrateState(initialData.savedState.menu || []);
+            builderFooter = hydrateState(initialData.savedState.footer || []);
+        }
+        
         renderArboList();
         renderBuilder();
-      }).getArborescenceForMenuFooter();
+      }).getInitialMenuFooterData();
     };
 
     // ========== TABS ===========
@@ -134,7 +160,7 @@
           const btn = document.createElement('button');
           btn.className = 'add-btn';
           btn.textContent = '+';
-          btn.title = (currentTab === "menu" && String(page.Niveau) === "2") ? "Ajouter comme sous-menu" : "Ajouter";
+          btn.title = "Ajouter à la racine";
           btn.onclick = function () { addPageToBuilder(page); };
           const item = document.createElement('div');
           item.className = 'page-item';
@@ -176,10 +202,12 @@
         input.className = 'rename-input';
         input.title = 'Libellé affiché';
         input.onchange = e => { item.label = e.target.value; };
+        
         const url = document.createElement('span');
         url.className = 'url-span';
         url.textContent = item.urlRelative || '';
         url.title = item.URL || '';
+        
         const subBtn = document.createElement('button');
         subBtn.className = 'add-submenu-btn';
         subBtn.innerHTML = '➕ Sous-menu';
@@ -226,10 +254,12 @@
             subinput.className = 'rename-input';
             subinput.title = 'Libellé sous-menu';
             subinput.onchange = e => { subitem.label = e.target.value; };
+            
             const suburl = document.createElement('span');
             suburl.className = 'url-span';
             suburl.textContent = subitem.urlRelative || '';
             suburl.title = subitem.URL || '';
+            
             const subSubBtn = document.createElement('button');
             subSubBtn.className = 'add-submenu-btn';
             subSubBtn.innerHTML = '➕ Sous-menu';
@@ -269,10 +299,12 @@
                 subsubinput.className = 'rename-input';
                 subsubinput.title = 'Libellé sous-menu';
                 subsubinput.onchange = e => { subsubitem.label = e.target.value; };
+
                 const subsuburl = document.createElement('span');
                 subsuburl.className = 'url-span';
                 subsuburl.textContent = subsubitem.urlRelative || '';
                 subsuburl.title = subsubitem.URL || '';
+                
                 const subsubrm = document.createElement('button');
                 subsubrm.className = 'remove-btn';
                 subsubrm.innerHTML = '🗑️';
@@ -305,35 +337,27 @@
     function addPageToBuilder(page) {
         const builder = (currentTab === 'menu') ? builderMenu : builderFooter;
         const builderName = (currentTab === 'menu') ? 'menu' : 'footer';
-        const pageLevel = String(page.Niveau);
-        if (pageLevel === "1") {
-            if (builder.length > 0 && builder.some(item => String(item.Niveau) === "2")) {
-                document.getElementById('saveStatus').textContent = '❌ Impossible de mélanger les niveaux 1 et 2 à la racine. Ce ' + builderName + ' est basé sur des pages de niveau 2.';
-                return;
+        
+        // Vérifie si la page est déjà présente dans toute la structure (y compris les enfants)
+        function isPageInBuilder(items, url) {
+            for (const item of items) {
+                if ((item.URL || item.url) === url) return true;
+                if (item.children && isPageInBuilder(item.children, url)) return true;
             }
-            if (builder.some(p => p.URL === page.URL)) {
-                document.getElementById('saveStatus').textContent = '⚠️ Déjà présent dans le ' + builderName;
-                return;
-            }
-            builder.push({ ...page, label: page.Nom, children: [] });
-        } else if (pageLevel === "2") {
-            if (builder.length > 0 && builder.some(item => String(item.Niveau) === "1")) {
-                showSubmenuSelector(null, page);
-                return;
-            }
-            if (builder.some(p => p.URL === page.URL)) {
-                document.getElementById('saveStatus').textContent = '⚠️ Déjà présent dans le ' + builderName;
-                return;
-            }
-            builder.push({ ...page, label: page.Nom, children: [] });
-        } else if (pageLevel === "3") {
-            document.getElementById('saveStatus').textContent = 'ℹ️ Ajoutez les pages de niveau 3 via le bouton "➕ Sous-menu" d\'un élément de niveau 2.';
+            return false;
+        }
+
+        if (isPageInBuilder(builder, page.URL)) {
+            document.getElementById('saveStatus').textContent = '⚠️ Déjà présent dans le ' + builderName;
             return;
         }
+        
+        // Ajoute la page à la racine. La logique d'affichage gère le reste.
+        builder.push({ ...page, label: page.Nom, children: [] });
         renderBuilder();
     }
 
-    // ========== SOUS-MENUS =============
+    // ========== SOUS-MENUS (inchangé) =============
     function showSubmenuSelector(parentIdx, pageToAdd) {
       const builder = (currentTab === 'menu') ? builderMenu : builderFooter;
       let oldPopin = document.getElementById("sf-poppin");
@@ -490,45 +514,18 @@
 
     // ========== ENREGISTREMENT ============
     function saveMenuFooter() {
-      // Helper pour convertir une structure en tableau exportable
-      const createExportArray = (builder, type) => {
-          const mainType = type;
-          const subType = 'sub' + mainType;
-          const subSubType = 'sub' + mainType + '3';
-          return builder.map((item, order) => ({
+      const createExportArray = (builder) => {
+          return builder.map(item => ({
               label: item.label || item.Nom,
-              url: item.URL, // On utilise l'URL complète (relative)
-              ordre: order + 1,
-              niveau: item.Niveau || '',
-              parent: item['Niveau parent'] || '',
-              filAriane: item['Fil d\'Ariane'] || '',
-              type: mainType,
+              url: item.URL || item.url, 
+              Niveau: item.Niveau,
               nonClickable: item.nonClickable || false,
-              children: (item.children || []).map((c, idx) => ({
-                  label: c.label || c.Nom,
-                  url: c.URL,
-                  ordre: idx + 1,
-                  niveau: c.Niveau || '',
-                  parent: c['Niveau parent'] || '',
-                  filAriane: c['Fil d\'Ariane'] || '',
-                  type: subType,
-                  nonClickable: c.nonClickable || false,
-                  children: (c.children || []).map((cc, ccidx) => ({
-                      label: cc.label || cc.Nom,
-                      url: cc.URL,
-                      ordre: ccidx + 1,
-                      niveau: cc.Niveau || '',
-                      parent: cc['Niveau parent'] || '',
-                      filAriane: cc['Fil d\'Ariane'] || '',
-                      type: subSubType,
-                      nonClickable: cc.nonClickable || false,
-                  }))
-              }))
+              children: (item.children && item.children.length > 0) ? createExportArray(item.children) : []
           }));
       };
 
-      const menuData = createExportArray(builderMenu, 'menu');
-      const footerData = createExportArray(builderFooter, 'footer');
+      const menuData = createExportArray(builderMenu);
+      const footerData = createExportArray(builderFooter);
 
       document.getElementById('saveStatus').textContent = 'Enregistrement...';
       google.script.run
