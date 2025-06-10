@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Google Sans', sans-serif;
+      background-color: white;
+      padding: 20px;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .template-block {
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background-color: #f9f9f9;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      font-size: 14px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      background-color: #f4f4f4;
+      box-sizing: border-box;
+    }
+
+    input::placeholder {
+      color: #888;
+    }
+
+    button {
+      padding: 10px 16px;
+      font-size: 14px;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background-color 0.3s;
+    }
+
+    .add-btn {
+      background-color: #073763;
+      color: white;
+    }
+
+    .add-btn:hover {
+      background-color: #0b4a8a;
+    }
+
+    .validate-btn {
+      background-color: #073763;
+      color: white;
+    }
+
+    .validate-btn:hover {
+      background-color: #0b4a8a;
+    }
+
+    .validate-btn.validated {
+      background-color: #28a745 !important;
+      color: white;
+    }
+
+    .error {
+      color: red;
+      text-align: center;
+      font-size: 13px;
+    }
+
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container" id="templateContainer">
+    <!-- Blocs templates générés ici -->
+  </div>
+
+  <div class="button-group">
+    <button class="add-btn" onclick="ajouterTemplate()">+ Ajouter un template</button>
+    <div class="error" id="errorMessage"></div>
+    <button id="btnValider" class="validate-btn" onclick="validerTemplates()">Valider</button>
+  </div>
+
+  <script>
+    function ajouterTemplate(nom = '', url = '') {
+      const container = document.getElementById('templateContainer');
+      const block = document.createElement('div');
+      block.className = 'template-block';
+      block.innerHTML = `
+        <input type="text" class="template-nom" placeholder="Nom du template" value="${nom}">
+        <input type="text" class="template-url" placeholder="URL de l'image du balisage SEO" value="${url}">
+      `;
+      container.appendChild(block);
+    }
+
+    function validerTemplates() {
+      const noms = document.querySelectorAll('.template-nom');
+      const urls = document.querySelectorAll('.template-url');
+      const result = [];
+      const errorDiv = document.getElementById('errorMessage');
+      const btn = document.getElementById('btnValider');
+      errorDiv.textContent = '';
+
+      for (let i = 0; i < noms.length; i++) {
+        const nom = noms[i].value.trim();
+        const url = urls[i].value.trim();
+        if (!nom || !url) {
+          errorDiv.textContent = '🚫 Chaque template doit avoir un nom et une URL.';
+          return;
+        }
+        result.push({ nom, url });
+      }
+
+      google.script.run
+        .withSuccessHandler(() => {
+          btn.classList.add('validated');
+          btn.innerText = '✅ Validé';
+          btn.disabled = true;
+          setTimeout(() => {
+            google.script.host.close();
+          }, 1500);
+        })
+        .enregistrerTemplates(result);
+    }
+
+    window.onload = function () {
+      google.script.run.withSuccessHandler(function (templates) {
+        if (Array.isArray(templates) && templates.length > 0) {
+          templates.forEach(t => {
+            ajouterTemplate(t.nom, t.url);
+          });
+        } else {
+          ajouterTemplate(); // Ajout vide si aucun template enregistré
+        }
+      }).getTemplates();
+    };
+  </script>
+</body>
+</html>
