@@ -55,7 +55,6 @@
     <button class="tab" id="tab-footer" onclick="switchTab('footer')">Footer</button>
   </div>
   <div class="builder-container">
-    <!-- Left: Liste arborescence -->
     <div class="left-panel">
       <div class="level-filter">
         <label><input type="radio" name="level" value="1" checked onchange="renderArboList()">Niveau 1</label>
@@ -71,7 +70,6 @@
       <div class="info-bar">Clique sur <b>+</b> pour ajouter une page.<br>
         (Filtrer par nom, URL, fil d'Ariane ou niveau)</div>
     </div>
-    <!-- Right: Construction menu/footer -->
     <div class="right-panel">
       <h3 id="builderTitle">Menu principal</h3>
       <div class="menu-builder-list" id="builderList"></div>
@@ -156,231 +154,228 @@
         return;
       }
       builderDiv.innerHTML = '';
-      // Menu : avec sous-menus
-      if (currentTab === "menu") {
-        builder.forEach((item, i) => {
-          const line = document.createElement('div');
-          line.className = 'builder-item';
-          // Ordre
-          const up = document.createElement('button');
-          up.className = 'order-btn';
-          up.innerHTML = '⬆️';
-          up.title = 'Monter';
-          up.onclick = () => moveItem(i, -1);
-          up.disabled = (i === 0);
-          const down = document.createElement('button');
-          down.className = 'order-btn';
-          down.innerHTML = '⬇️';
-          down.title = 'Descendre';
-          down.onclick = () => moveItem(i, 1);
-          down.disabled = (i === builder.length - 1);
+      
+      builder.forEach((item, i) => {
+        const line = document.createElement('div');
+        line.className = 'builder-item';
+        // Ordre
+        const up = document.createElement('button');
+        up.className = 'order-btn';
+        up.innerHTML = '⬆️';
+        up.title = 'Monter';
+        up.onclick = () => moveItem(i, -1);
+        up.disabled = (i === 0);
+        const down = document.createElement('button');
+        down.className = 'order-btn';
+        down.innerHTML = '⬇️';
+        down.title = 'Descendre';
+        down.onclick = () => moveItem(i, 1);
+        down.disabled = (i === builder.length - 1);
 
-          // Renommage
-          const input = document.createElement('input');
-          input.type = 'text';
-          input.value = item.label || item.Nom || '';
-          input.className = 'rename-input';
-          input.title = 'Libellé affiché';
-          input.onchange = e => { item.label = e.target.value; };
+        // Renommage
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = item.label || item.Nom || '';
+        input.className = 'rename-input';
+        input.title = 'Libellé affiché';
+        input.onchange = e => { item.label = e.target.value; };
 
-          // URL
-          const url = document.createElement('span');
-          url.className = 'url-span';
-          url.textContent = item.urlRelative || '';
-          url.title = item.URL || '';
+        // URL
+        const url = document.createElement('span');
+        url.className = 'url-span';
+        url.textContent = item.urlRelative || '';
+        url.title = item.URL || '';
 
-          // Sous-menus niveau 2 (bouton)
-          const subBtn = document.createElement('button');
-          subBtn.className = 'add-submenu-btn';
-          subBtn.innerHTML = '➕ Sous-menu';
-          subBtn.title = 'Ajouter un sous-menu';
-          subBtn.onclick = () => showSubmenuSelector(i);
+        // Sous-menus (bouton)
+        const subBtn = document.createElement('button');
+        subBtn.className = 'add-submenu-btn';
+        subBtn.innerHTML = '➕ Sous-menu';
+        subBtn.title = 'Ajouter un sous-menu';
+        
+        if (String(item.Niveau) === '1') {
+            subBtn.onclick = () => showSubmenuSelector(i);
+        } else if (String(item.Niveau) === '2') {
+            subBtn.onclick = () => showSubsubmenuSelector(i, -1);
+        } else {
+            subBtn.style.display = 'none';
+        }
 
-          // Supprimer
-          const rm = document.createElement('button');
-          rm.className = 'remove-btn';
-          rm.innerHTML = '🗑️';
-          rm.title = 'Supprimer';
-          rm.onclick = () => removeItem(i);
+        // Supprimer
+        const rm = document.createElement('button');
+        rm.className = 'remove-btn';
+        rm.innerHTML = '🗑️';
+        rm.title = 'Supprimer';
+        rm.onclick = () => removeItem(i);
+        
+        // Option "Non cliquable"
+        const nonClickableLabel = document.createElement('label');
+        nonClickableLabel.style.cssText = 'margin-left:auto; font-size:13px; color:#555; cursor:pointer; display:flex; align-items:center;';
+        const nonClickableCheckbox = document.createElement('input');
+        nonClickableCheckbox.type = 'checkbox';
+        nonClickableCheckbox.checked = !!item.nonClickable;
+        nonClickableCheckbox.onchange = () => { item.nonClickable = nonClickableCheckbox.checked; };
+        nonClickableLabel.appendChild(nonClickableCheckbox);
+        nonClickableLabel.appendChild(document.createTextNode(' Non cliquable'));
 
-          line.appendChild(up);
-          line.appendChild(down);
-          line.appendChild(input);
-          line.appendChild(url);
-          line.appendChild(subBtn);
-          line.appendChild(rm);
+        line.appendChild(up);
+        line.appendChild(down);
+        line.appendChild(input);
+        line.appendChild(url);
+        line.appendChild(subBtn);
+        line.appendChild(rm);
+        line.appendChild(nonClickableLabel);
 
-          builderDiv.appendChild(line);
+        builderDiv.appendChild(line);
 
-          // Affiche les sous-menus Niveau 2
-          if (item.children && item.children.length) {
-            const subDiv = document.createElement('div');
-            subDiv.className = 'submenu-list';
-            item.children.forEach((subitem, j) => {
-              const subline = document.createElement('div');
-              subline.className = 'builder-item';
-              subline.style.background = '#f3f5fa';
-              // Sous-menu : pas de reorder, juste remove/rename
-              const subinput = document.createElement('input');
-              subinput.type = 'text';
-              subinput.value = subitem.label || subitem.Nom || '';
-              subinput.className = 'rename-input';
-              subinput.title = 'Libellé sous-menu';
-              subinput.onchange = e => { subitem.label = e.target.value; };
-              const suburl = document.createElement('span');
-              suburl.className = 'url-span';
-              suburl.textContent = subitem.urlRelative || '';
-              suburl.title = subitem.URL || '';
-              // Bouton niveau 3 (seulement ici)
-              const subSubBtn = document.createElement('button');
-              subSubBtn.className = 'add-submenu-btn';
-              subSubBtn.innerHTML = '➕ Sous-menu';
-              subSubBtn.title = 'Ajouter un sous-menu de niveau 3';
-              subSubBtn.onclick = () => showSubsubmenuSelector(i, j);
+        // Affiche les sous-menus Niveau 2
+        if (item.children && item.children.length) {
+          const subDiv = document.createElement('div');
+          subDiv.className = 'submenu-list';
+          item.children.forEach((subitem, j) => {
+            const subline = document.createElement('div');
+            subline.className = 'builder-item';
+            subline.style.background = '#f3f5fa';
 
-              // Supprimer sous-menu niveau 2
-              const subrm = document.createElement('button');
-              subrm.className = 'remove-btn';
-              subrm.innerHTML = '🗑️';
-              subrm.title = 'Supprimer';
-              subrm.onclick = () => removeSubmenu(i, j);
+            const subinput = document.createElement('input');
+            subinput.type = 'text';
+            subinput.value = subitem.label || subitem.Nom || '';
+            subinput.className = 'rename-input';
+            subinput.title = 'Libellé sous-menu';
+            subinput.onchange = e => { subitem.label = e.target.value; };
+            const suburl = document.createElement('span');
+            suburl.className = 'url-span';
+            suburl.textContent = subitem.urlRelative || '';
+            suburl.title = subitem.URL || '';
+            
+            const subSubBtn = document.createElement('button');
+            subSubBtn.className = 'add-submenu-btn';
+            subSubBtn.innerHTML = '➕ Sous-menu';
+            subSubBtn.title = 'Ajouter un sous-menu de niveau 3';
+            subSubBtn.onclick = () => showSubsubmenuSelector(i, j);
 
-              subline.appendChild(document.createElement('span')).textContent = '↳';
-              subline.appendChild(subinput);
-              subline.appendChild(suburl);
-              subline.appendChild(subSubBtn);
-              subline.appendChild(subrm);
-              subDiv.appendChild(subline);
+            const subrm = document.createElement('button');
+            subrm.className = 'remove-btn';
+            subrm.innerHTML = '🗑️';
+            subrm.title = 'Supprimer';
+            subrm.onclick = () => removeSubmenu(i, j);
 
-              // Affiche les sous-menus Niveau 3
-              if (subitem.children && subitem.children.length) {
-                const subSubDiv = document.createElement('div');
-                subSubDiv.className = 'submenu-list';
-                subitem.children.forEach((subsubitem, k) => {
-                  const subsubline = document.createElement('div');
-                  subsubline.className = 'builder-item';
-                  subsubline.style.background = '#f8fafb';
-                  const subsubinput = document.createElement('input');
-                  subsubinput.type = 'text';
-                  subsubinput.value = subsubitem.label || subsubitem.Nom || '';
-                  subsubinput.className = 'rename-input';
-                  subsubinput.title = 'Libellé sous-menu';
-                  subsubinput.onchange = e => { subsubitem.label = e.target.value; };
-                  const subsuburl = document.createElement('span');
-                  subsuburl.className = 'url-span';
-                  subsuburl.textContent = subsubitem.urlRelative || '';
-                  subsuburl.title = subsubitem.URL || '';
-                  // Supprimer niveau 3
-                  const subsubrm = document.createElement('button');
-                  subsubrm.className = 'remove-btn';
-                  subsubrm.innerHTML = '🗑️';
-                  subsubrm.title = 'Supprimer';
-                  subsubrm.onclick = () => removeSubsubmenu(i, j, k);
-                  subsubline.appendChild(document.createElement('span')).textContent = '↳';
-                  subsubline.appendChild(subsubinput);
-                  subsubline.appendChild(subsuburl);
-                  subsubline.appendChild(subsubrm);
-                  subSubDiv.appendChild(subsubline);
-                });
-                subDiv.appendChild(subSubDiv);
-              }
-            });
-            builderDiv.appendChild(subDiv);
-          }
-        });
-      } else {
-        // Footer : structure plate
-        builder.forEach((item, i) => {
-          const line = document.createElement('div');
-          line.className = 'builder-item';
-          // Ordre
-          const up = document.createElement('button');
-          up.className = 'order-btn';
-          up.innerHTML = '⬆️';
-          up.title = 'Monter';
-          up.onclick = () => moveItem(i, -1);
-          up.disabled = (i === 0);
-          const down = document.createElement('button');
-          down.className = 'order-btn';
-          down.innerHTML = '⬇️';
-          down.title = 'Descendre';
-          down.onclick = () => moveItem(i, 1);
-          down.disabled = (i === builder.length - 1);
+            const subNonClickableLabel = document.createElement('label');
+            subNonClickableLabel.style.cssText = 'margin-left:auto; font-size:13px; color:#555; cursor:pointer; display:flex; align-items:center;';
+            const subNonClickableCheckbox = document.createElement('input');
+            subNonClickableCheckbox.type = 'checkbox';
+            subNonClickableCheckbox.checked = !!subitem.nonClickable;
+            subNonClickableCheckbox.onchange = () => { subitem.nonClickable = subNonClickableCheckbox.checked; };
+            subNonClickableLabel.appendChild(subNonClickableCheckbox);
+            subNonClickableLabel.appendChild(document.createTextNode(' Non cliquable'));
 
-          // Renommage
-          const input = document.createElement('input');
-          input.type = 'text';
-          input.value = item.label || item.Nom || '';
-          input.className = 'rename-input';
-          input.title = 'Libellé affiché';
-          input.onchange = e => { item.label = e.target.value; };
+            subline.appendChild(document.createElement('span')).textContent = '↳';
+            subline.appendChild(subinput);
+            subline.appendChild(suburl);
+            subline.appendChild(subSubBtn);
+            subline.appendChild(subrm);
+            subline.appendChild(subNonClickableLabel);
+            subDiv.appendChild(subline);
 
-          // URL
-          const url = document.createElement('span');
-          url.className = 'url-span';
-          url.textContent = item.urlRelative || '';
-          url.title = item.URL || '';
+            // Affiche les sous-menus Niveau 3
+            if (subitem.children && subitem.children.length) {
+              const subSubDiv = document.createElement('div');
+              subSubDiv.className = 'submenu-list';
+              subitem.children.forEach((subsubitem, k) => {
+                const subsubline = document.createElement('div');
+                subsubline.className = 'builder-item';
+                subsubline.style.background = '#f8fafb';
 
-          // Supprimer
-          const rm = document.createElement('button');
-          rm.className = 'remove-btn';
-          rm.innerHTML = '🗑️';
-          rm.title = 'Supprimer';
-          rm.onclick = () => removeItem(i);
+                const subsubinput = document.createElement('input');
+                subsubinput.type = 'text';
+                subsubinput.value = subsubitem.label || subsubitem.Nom || '';
+                subsubinput.className = 'rename-input';
+                subsubinput.title = 'Libellé sous-menu';
+                subsubinput.onchange = e => { subsubitem.label = e.target.value; };
+                const subsuburl = document.createElement('span');
+                subsuburl.className = 'url-span';
+                subsuburl.textContent = subsubitem.urlRelative || '';
+                subsuburl.title = subsubitem.URL || '';
+                
+                const subsubrm = document.createElement('button');
+                subsubrm.className = 'remove-btn';
+                subsubrm.innerHTML = '🗑️';
+                subsubrm.title = 'Supprimer';
+                subsubrm.onclick = () => removeSubsubmenu(i, j, k);
 
-          line.appendChild(up);
-          line.appendChild(down);
-          line.appendChild(input);
-          line.appendChild(url);
-          line.appendChild(rm);
+                const subSubNonClickableLabel = document.createElement('label');
+                subSubNonClickableLabel.style.cssText = 'margin-left:auto; font-size:13px; color:#555; cursor:pointer; display:flex; align-items:center;';
+                const subSubNonClickableCheckbox = document.createElement('input');
+                subSubNonClickableCheckbox.type = 'checkbox';
+                subSubNonClickableCheckbox.checked = !!subsubitem.nonClickable;
+                subSubNonClickableCheckbox.onchange = () => { subsubitem.nonClickable = subSubNonClickableCheckbox.checked; };
+                subSubNonClickableLabel.appendChild(subSubNonClickableCheckbox);
+                subSubNonClickableLabel.appendChild(document.createTextNode(' Non cliquable'));
 
-          builderDiv.appendChild(line);
-        });
-      }
+                subsubline.appendChild(document.createElement('span')).textContent = '↳';
+                subsubline.appendChild(subsubinput);
+                subsubline.appendChild(subsuburl);
+                subsubline.appendChild(subsubrm);
+                subsubline.appendChild(subSubNonClickableLabel);
+                subSubDiv.appendChild(subsubline);
+              });
+              subDiv.appendChild(subSubDiv);
+            }
+          });
+          builderDiv.appendChild(subDiv);
+        }
+      });
     }
 
     // ===== Ajout de page =====
     function addPageToBuilder(page) {
-      if (currentTab === "menu") {
-        if (String(page.Niveau) === "1") {
-          if (builderMenu.some(p => p.URL === page.URL)) {
-            document.getElementById('saveStatus').textContent = '⚠️ Déjà présent dans le menu';
+        const builder = (currentTab === 'menu') ? builderMenu : builderFooter;
+        const builderName = (currentTab === 'menu') ? 'menu' : 'footer';
+        const pageLevel = String(page.Niveau);
+
+        if (pageLevel === "1") {
+            if (builder.length > 0 && builder.some(item => String(item.Niveau) === "2")) {
+                document.getElementById('saveStatus').textContent = '❌ Impossible de mélanger les niveaux 1 et 2 à la racine. Ce ' + builderName + ' est basé sur des pages de niveau 2.';
+                return;
+            }
+            if (builder.some(p => p.URL === page.URL)) {
+                document.getElementById('saveStatus').textContent = '⚠️ Déjà présent dans le ' + builderName;
+                return;
+            }
+            builder.push({ ...page, label: page.Nom, children: [] });
+
+        } else if (pageLevel === "2") {
+            if (builder.length > 0 && builder.some(item => String(item.Niveau) === "1")) {
+                showSubmenuSelector(null, page);
+                return;
+            }
+            if (builder.some(p => p.URL === page.URL)) {
+                document.getElementById('saveStatus').textContent = '⚠️ Déjà présent dans le ' + builderName;
+                return;
+            }
+            builder.push({ ...page, label: page.Nom, children: [] });
+        } else if (pageLevel === "3") {
+            document.getElementById('saveStatus').textContent = 'ℹ️ Ajoutez les pages de niveau 3 via le bouton "➕ Sous-menu" d\'un élément de niveau 2.';
             return;
-          }
-          builderMenu.push({ ...page, label: page.Nom, children: [] });
-          renderBuilder();
-        } else if (String(page.Niveau) === "2") {
-          // Demande à l'utilisateur dans quel menu principal rattacher
-          if (!builderMenu.length) {
-            document.getElementById('saveStatus').textContent = 'Ajoute d\'abord un menu principal niveau 1';
-            return;
-          }
-          showSubmenuSelector(null, page); // null car page à rattacher, pas bouton
         }
-      } else {
-        // Footer : flat
-        if (builderFooter.some(p => p.URL === page.URL)) {
-          document.getElementById('saveStatus').textContent = '⚠️ Déjà présent dans le footer';
-          return;
-        }
-        builderFooter.push({ ...page, label: page.Nom });
         renderBuilder();
-      }
     }
 
+
     // ========== SOUS-MENUS =============
-    // Cas bouton ➕ Sous-menu sur un item existant
     function showSubmenuSelector(parentIdx, pageToAdd) {
-      // Supprime un éventuel ancien popin
+      const builder = (currentTab === 'menu') ? builderMenu : builderFooter;
       let oldPopin = document.getElementById("sf-poppin");
       if (oldPopin) oldPopin.remove();
 
-      // Cas où on veut rattacher une page niveau 2 à un parent choisi
       if (pageToAdd) {
-        const parents = builderMenu.map((itm, idx) => `<option value="${idx}">${itm.label || itm.Nom}</option>`).join('');
+        const parents = builder.filter(p => String(p.Niveau) === '1').map((itm, idx) => `<option value="${idx}">${itm.label || itm.Nom}</option>`).join('');
+        if (!parents) {
+            alert("Aucun item de niveau 1 n'existe pour y rattacher cette page.");
+            return;
+        }
         const html = `
           <div style="padding:18px 18px 8px 18px;font-family:Arial">
-            <b>Ajouter "<span style='color:#073763'>${pageToAdd.Nom}</span>" à quel menu principal ?</b><br><br>
+            <b>Ajouter "<span style='color:#073763'>${pageToAdd.Nom}</span>" à quel item principal ?</b><br><br>
             <select id="sf-selParent">${parents}</select>
             <button id="sf-okBtn" style="margin-left:10px;background:#073763;color:#fff;border:none;padding:6px 14px;border-radius:5px;cursor:pointer;">Ajouter</button>
             <button id="sf-cancelBtn" style="margin-left:10px;background:#ddd;color:#333;border:none;padding:6px 14px;border-radius:5px;cursor:pointer;">Annuler</button>
@@ -403,42 +398,31 @@
 
         document.getElementById("sf-okBtn").onclick = function() {
           const pidx = parseInt(document.getElementById("sf-selParent").value, 10);
-          if (!builderMenu[pidx].children) builderMenu[pidx].children = [];
-          if (builderMenu[pidx].children.some(child => child.URL === pageToAdd.URL)) {
+          if (!builder[pidx].children) builder[pidx].children = [];
+          if (builder[pidx].children.some(child => child.URL === pageToAdd.URL)) {
             alert("Déjà présent dans ce sous-menu.");
             dlg.remove(); return;
           }
-          builderMenu[pidx].children.push({ ...pageToAdd, label: pageToAdd.Nom });
+          builder[pidx].children.push({ ...pageToAdd, label: pageToAdd.Nom });
           renderBuilder();
           dlg.remove();
         };
-        document.getElementById("sf-cancelBtn").onclick = function() {
-          dlg.remove();
-        };
-
-        setTimeout(function() {
-          document.body.addEventListener('click', removePopin, { once: true });
-        }, 30);
-        function removePopin(e) {
-          if (dlg && dlg.parentNode) dlg.parentNode.removeChild(dlg);
-        }
+        document.getElementById("sf-cancelBtn").onclick = function() { dlg.remove(); };
+        setTimeout(() => document.body.addEventListener('click', () => dlg.remove(), { once: true }), 30);
         return;
       }
 
-      // Cas bouton "➕ Sous-menu" sur un item principal
-      let parentName = builderMenu[parentIdx].Nom || builderMenu[parentIdx].label;
+      let parentName = builder[parentIdx].Nom || builder[parentIdx].label;
       let options = arboPages.filter(p =>
         String(p.Niveau) === "2" &&
         (p['Niveau parent'] === parentName) &&
-        !builderMenu[parentIdx].children?.some(child => child.URL === p.URL)
+        !builder[parentIdx].children?.some(child => child.URL === p.URL)
       );
       if (!options.length) {
-        alert("Aucune page niveau 2 dispo ou tout a déjà été ajouté comme sous-menu.");
+        alert("Aucune page niveau 2 disponible ou tout a déjà été ajouté comme sous-menu.");
         return;
       }
-      const optionsHtml = options.map(p =>
-        `<option value="${p.URL}">${p.Nom} (${p.urlRelative || p.URL})</option>`
-      ).join('');
+      const optionsHtml = options.map(p => `<option value="${p.URL}">${p.Nom} (${p.urlRelative || p.URL})</option>`).join('');
       const html = `
         <div style="padding:18px 18px 8px 18px;font-family:Arial">
           <b>Choisir la page à ajouter en sous-menu :</b><br><br>
@@ -465,32 +449,30 @@
       document.getElementById("sf-okBtn2").onclick = function() {
         const url = document.getElementById("sf-selSubmenu").value;
         const page = arboPages.find(p => p.URL === url);
-        if (!builderMenu[parentIdx].children) builderMenu[parentIdx].children = [];
-        builderMenu[parentIdx].children.push({ ...page, label: page.Nom });
+        if (!builder[parentIdx].children) builder[parentIdx].children = [];
+        builder[parentIdx].children.push({ ...page, label: page.Nom });
         renderBuilder();
         dlg.remove();
       };
-      document.getElementById("sf-cancelBtn2").onclick = function() {
-        dlg.remove();
-      };
-
-      setTimeout(function() {
-        document.body.addEventListener('click', removePopin, { once: true });
-      }, 30);
-      function removePopin(e) {
-        if (dlg && dlg.parentNode) dlg.parentNode.removeChild(dlg);
-      }
+      document.getElementById("sf-cancelBtn2").onclick = function() { dlg.remove(); };
+      setTimeout(() => document.body.addEventListener('click', () => dlg.remove(), { once: true }), 30);
     }
 
-    // Supprimer sous-menu
     function removeSubmenu(parentIdx, subIdx) {
-      builderMenu[parentIdx].children.splice(subIdx, 1);
+      const builder = (currentTab === 'menu') ? builderMenu : builderFooter;
+      builder[parentIdx].children.splice(subIdx, 1);
       renderBuilder();
     }
 
     function showSubsubmenuSelector(parentIdx, subIdx) {
-      // parentIdx: index du menu niveau 1, subIdx: index du niveau 2
-      let subitem = builderMenu[parentIdx].children[subIdx];
+      const builder = (currentTab === 'menu') ? builderMenu : builderFooter;
+      let subitem;
+      if (subIdx === -1) {
+          subitem = builder[parentIdx];
+      } else {
+          subitem = builder[parentIdx].children[subIdx];
+      }
+      
       let parentName = subitem.Nom || subitem.label;
       let options = arboPages.filter(p =>
         String(p.Niveau) === "3" &&
@@ -498,12 +480,10 @@
         !(subitem.children || []).some(child => child.URL === p.URL)
       );
       if (!options.length) {
-        alert("Aucune page niveau 3 dispo ou tout a déjà été ajouté comme sous-menu.");
+        alert("Aucune page niveau 3 disponible ou tout a déjà été ajouté comme sous-menu.");
         return;
       }
-      const optionsHtml = options.map(p =>
-        `<option value="${p.URL}">${p.Nom} (${p.urlRelative || p.URL})</option>`
-      ).join('');
+      const optionsHtml = options.map(p => `<option value="${p.URL}">${p.Nom} (${p.urlRelative || p.URL})</option>`).join('');
       const html = `
         <div style="padding:18px 18px 8px 18px;font-family:Arial">
           <b>Choisir la page à ajouter en sous-menu de niveau 3 :</b><br><br>
@@ -537,24 +517,16 @@
         renderBuilder();
         dlg.remove();
       };
-      document.getElementById("sf-cancelBtn3").onclick = function() {
-        dlg.remove();
-      };
-
-      setTimeout(function() {
-        document.body.addEventListener('click', removePopin, { once: true });
-      }, 30);
-      function removePopin(e) {
-        if (dlg && dlg.parentNode) dlg.parentNode.removeChild(dlg);
-      }
+      document.getElementById("sf-cancelBtn3").onclick = function() { dlg.remove(); };
+      setTimeout(() => document.body.addEventListener('click', () => dlg.remove(), { once: true }), 30);
     }
 
     function removeSubsubmenu(parentIdx, subIdx, subsubIdx) {
-      builderMenu[parentIdx].children[subIdx].children.splice(subsubIdx, 1);
+      const builder = (currentTab === 'menu') ? builderMenu : builderFooter;
+      builder[parentIdx].children[subIdx].children.splice(subsubIdx, 1);
       renderBuilder();
     }
 
-    // Supprimer
     function removeItem(idx) {
       const builder = (currentTab === 'menu') ? builderMenu : builderFooter;
       builder.splice(idx, 1);
@@ -569,53 +541,47 @@
       renderBuilder();
     }
 
-    // ========== ENREGISTREMENT ============
     function saveMenuFooter() {
       const builder = (currentTab === 'menu') ? builderMenu : builderFooter;
       if (!builder.length) {
         document.getElementById('saveStatus').textContent = 'Aucun élément à enregistrer.';
         return;
       }
-      let exportArr;
-      if (currentTab === "menu") {
-        exportArr = builder.map((item, order) => ({
-          label: item.label || item.Nom,
-          url: item.URL,
-          ordre: order + 1,
-          niveau: item.Niveau || '',
-          parent: item['Niveau parent'] || '',
-          filAriane: item['Fil d\'Ariane'] || '',
-          type: "menu",
-          children: (item.children || []).map((c, idx) => ({
-            label: c.label || c.Nom,
-            url: c.URL,
-            ordre: idx+1,
-            niveau: c.Niveau || '',
-            parent: c['Niveau parent'] || '',
-            filAriane: c['Fil d\'Ariane'] || '',
-            type: "submenu",
-            children: (c.children || []).map((cc, ccidx) => ({
-              label: cc.label || cc.Nom,
-              url: cc.URL,
-              ordre: ccidx+1,
-              niveau: cc.Niveau || '',
-              parent: cc['Niveau parent'] || '',
-              filAriane: cc['Fil d\'Ariane'] || '',
-              type: "submenu3"
-            }))
+      const mainType = currentTab;
+      const subType = 'sub' + mainType;
+      const subSubType = 'sub' + mainType + '3';
+
+      let exportArr = builder.map((item, order) => ({
+        label: item.label || item.Nom,
+        url: item.URL,
+        ordre: order + 1,
+        niveau: item.Niveau || '',
+        parent: item['Niveau parent'] || '',
+        filAriane: item['Fil d\'Ariane'] || '',
+        type: mainType,
+        nonClickable: item.nonClickable || false,
+        children: (item.children || []).map((c, idx) => ({
+          label: c.label || c.Nom,
+          url: c.URL,
+          ordre: idx+1,
+          niveau: c.Niveau || '',
+          parent: c['Niveau parent'] || '',
+          filAriane: c['Fil d\'Ariane'] || '',
+          type: subType,
+          nonClickable: c.nonClickable || false,
+          children: (c.children || []).map((cc, ccidx) => ({
+            label: cc.label || cc.Nom,
+            url: cc.URL,
+            ordre: ccidx+1,
+            niveau: cc.Niveau || '',
+            parent: cc['Niveau parent'] || '',
+            filAriane: cc['Fil d\'Ariane'] || '',
+            type: subSubType,
+            nonClickable: cc.nonClickable || false,
           }))
-        }));
-      } else {
-        exportArr = builder.map((item, order) => ({
-          label: item.label || item.Nom,
-          url: item.URL,
-          ordre: order + 1,
-          niveau: item.Niveau || '',
-          parent: item['Niveau parent'] || '',
-          filAriane: item['Fil d\'Ariane'] || '',
-          type: "footer"
-        }));
-      }
+        }))
+      }));
+
       document.getElementById('saveStatus').textContent = 'Enregistrement...';
       google.script.run
         .withSuccessHandler(() => {
@@ -624,7 +590,7 @@
         .withFailureHandler(err => {
           document.getElementById('saveStatus').textContent = '❌ Erreur : ' + err.message;
         })
-        .saveMenuFooter(exportArr, currentTab); // À coder côté serveur
+        .createMenuFooter(exportArr, currentTab); // <-- APPEL MODIFIÉ ICI
     }
   </script>
 </body>
