@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Google Sans', sans-serif;
+      background-color: white;
+      padding: 20px;
+      margin: 0;
+    }
+
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .nav button {
+      background-color: #073763;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 10px 16px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .nav button.active {
+      background-color: #0b4a8a;
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    .instructions {
+      background: #f1f3f4;
+      border-left: 5px solid #1a73e8;
+      padding: 15px;
+      font-size: 14px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+
+    .file-select, .url-input {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    input[type="file"], input[type="text"] {
+      padding: 8px;
+      font-size: 14px;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+
+    .validate-btn {
+      background-color: #073763;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      font-size: 14px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .validate-btn:hover {
+      background-color: #0b4a8a;
+    }
+
+    .status {
+      text-align: center;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="nav">
+  <button onclick="showTab('prod', this)">Crawl - Prod</button>
+  <button onclick="showTab('preprod', this)">Crawl - Préprod</button>
+  <button onclick="showTab('strat', this)">Strat. Positionnement</button>
+  <button onclick="showTab('semrush', this)">Semrush</button>
+</div>
+
+<!-- Onglet Crawl - Prod -->
+<div id="prod" class="section active">
+  <div class="instructions" id="prodInstructions">Chargement des instructions...</div>
+  <div class="file-select">
+    <input type="file" id="crawlFileInput" onchange="updateCrawlFileName('crawlFileName')">
+    <button class="validate-btn" onclick="document.getElementById('crawlFileInput').click();">Sélectionner un fichier</button>
+    <div id="crawlFileName">Aucun fichier choisi</div>
+    <button class="validate-btn" onclick="importerCrawlProd(this)">Importer</button>
+    <div id="crawlStatusMessage" class="status"></div>
+  </div>
+</div>
+
+<!-- Onglet Crawl - Préprod -->
+<div id="preprod" class="section">
+  <div class="instructions" id="preprodInstructions">Chargement des instructions...</div>
+  <div class="file-select">
+    <input type="file" id="preprodFileInput" onchange="updateCrawlFileName('preprodFileName')">
+    <button class="validate-btn" onclick="document.getElementById('preprodFileInput').click();">Sélectionner un fichier</button>
+    <div id="preprodFileName">Aucun fichier choisi</div>
+    <button class="validate-btn" onclick="importerCrawlPreprod(this)">Importer</button>
+    <div id="preprodStatusMessage" class="status"></div>
+  </div>
+</div>
+
+<!-- Onglet Stratégie de positionnement -->
+<div id="strat" class="section">
+  <div class="instructions" id="stratInstructions">Chargement des instructions...</div>
+  <div class="url-input">
+    <input type="text" id="urlStrat" placeholder="Saisir l'URL à importer">
+    <button class="validate-btn" onclick="importerStrategiePositionnement()">Importer</button>
+    <div id="stratStatusMessage" class="status"></div>
+  </div>
+</div>
+
+<!-- Onglet Semrush -->
+<div id="semrush" class="section">
+  <div class="instructions" id="semrushInstructions">Chargement des instructions...</div>
+  <div class="file-select">
+    <input type="file" id="fileInput" multiple onchange="updateFileName()">
+    <button class="validate-btn" onclick="document.getElementById('fileInput').click();">Sélectionner un fichier</button>
+    <div id="fileName">Aucun fichier choisi</div>
+    <button class="validate-btn" onclick="importerSemrush(this)">Importer</button>
+    <div id="statusMessage" class="status"></div>
+  </div>
+</div>
+
+<script>
+  function showTab(id, btn) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  function updateFileName() {
+    const input = document.getElementById('fileInput');
+    const display = document.getElementById('fileName');
+    display.textContent = input.files.length > 0
+      ? `${input.files.length} fichier(s) sélectionné(s)`
+      : "Aucun fichier choisi";
+  }
+
+  function updateCrawlFileName(id) {
+    const input = document.getElementById(id === 'crawlFileName' ? 'crawlFileInput' : 'preprodFileInput');
+    const display = document.getElementById(id);
+    display.textContent = input.files.length > 0 ? input.files[0].name : "Aucun fichier choisi";
+  }
+
+  function importerCrawlProd(button) {
+    importerFichierCsv("crawlFileInput", "crawlStatusMessage", "crawl_prod", button);
+  }
+
+  function importerCrawlPreprod(button) {
+    alert("⛔ Fonction d'import Préprod désactivée pour l'instant.");
+  }
+
+  function importerStrategiePositionnement() {
+    const url = document.getElementById('urlStrat').value.trim();
+    const status = document.getElementById('stratStatusMessage');
+    if (!url) {
+      status.textContent = "❌ Aucun URL renseigné.";
+      return;
+    }
+    status.textContent = "Import en cours...";
+    google.script.run
+      .withSuccessHandler(response => {
+        status.textContent = response === "success"
+          ? "✅ Import terminé avec succès."
+          : "❌ " + response;
+      })
+      .withFailureHandler(err => {
+        status.textContent = "❌ Erreur : " + err.message;
+      })
+      .importerStrategiePositionnement(url);
+  }
+
+  function importerSemrush(button) {
+    const fileInput = document.getElementById('fileInput');
+    const status = document.getElementById('statusMessage');
+    const file = fileInput.files[0];
+
+    // Étape 1 : Vérification qu'un fichier est sélectionné
+    if (!file) {
+      status.textContent = "❌ Aucun fichier sélectionné.";
+      return;
+    }
+
+    // Étape 2 : Affichage de l'état et désactivation du bouton
+    status.textContent = "Import en cours...";
+    button.disabled = true;
+
+    // Étape 3 : Lecture du fichier CSV
+    const reader = new FileReader();
+    reader.onload = e => {
+      const csvString = e.target.result;
+
+      // Étape 4 : Appel à Apps Script
+      google.script.run
+        .withSuccessHandler(response => {
+          status.textContent = response === "success"
+            ? "✅ Import terminé avec succès."
+            : "❌ " + response;
+          button.disabled = false;
+        })
+        .withFailureHandler(err => {
+          status.textContent = "❌ Erreur : " + err.message;
+          button.disabled = false;
+        })
+        .gererImportCsv(csvString, 'semrush');
+    };
+    reader.onerror = () => {
+      status.textContent = "❌ Erreur lors de la lecture du fichier.";
+      button.disabled = false;
+    };
+    reader.readAsText(file, "UTF-8");
+  }
+
+  function importerFichierCsv(fileInputId, statusId, type, button) {
+    const fileInput = document.getElementById(fileInputId);
+    const status = document.getElementById(statusId);
+    const file = fileInput.files[0];
+
+    if (!file) {
+      status.textContent = "❌ Aucun fichier sélectionné.";
+      return;
+    }
+
+    status.textContent = "Import en cours...";
+    button.disabled = true;
+
+    const reader = new FileReader();
+    reader.onload = e => {
+      const csvString = e.target.result;
+      google.script.run
+        .withSuccessHandler(response => {
+          status.textContent = response === "success"
+            ? "✅ Import terminé avec succès." : "❌ " + response;
+          button.disabled = false;
+        })
+        .withFailureHandler(err => {
+          status.textContent = "❌ Erreur : " + err.message;
+          button.disabled = false;
+        })
+        .gererImportCsv(csvString, type);
+    };
+    reader.onerror = () => {
+      status.textContent = "❌ Erreur lors de la lecture du fichier.";
+      button.disabled = false;
+    };
+    reader.readAsText(file, "UTF-8");
+  }
+
+function chargerInstructionsDynamiques() {
+  console.log("[DEBUG] Début de chargerInstructionsDynamiques");
+
+  // Log du fait qu'on appelle Apps Script
+  try {
+    google.script.run
+      .withSuccessHandler(function(props) {
+        console.log("[DEBUG] Props reçues :", props);
+
+        // Log détaillé pour chaque propriété importante
+        console.log("[DEBUG] urlActuel :", props.urlActuel);
+        console.log("[DEBUG] urlPreprod :", props.urlPreprod);
+        console.log("[DEBUG] templates (brut) :", props.templates);
+
+        const urlActuel = props.urlActuel || '⚠️ URL actuelle non définie';
+        const urlPreprod = props.urlPreprod || '⚠️ URL préprod non définie';
+        const templatesRaw = props.templates;
+
+        let prodInstruction = `
+          Lancer un crawl de <strong>${urlActuel}</strong> en mode Spider.<br>
+          Configuration à utiliser : <code>CahierDesChargesProd.seospiderconfig</code><br><br>
+        `;
+
+        try {
+          const templates = JSON.parse(templatesRaw);
+          if (Array.isArray(templates) && templates.length > 0) {
+            const noms = templates.map(t => `– ${t.nom}`).join('<br>');
+            prodInstruction += `Segmenter le crawl avec les templates :<br>${noms}<br><br>`;
+            console.log("[DEBUG] Templates parsés avec succès :", noms);
+          } else {
+            prodInstruction += `<em>⚠️ Aucun template défini pour la segmentation</em><br><br>`;
+            console.warn("[WARN] Aucun template défini pour la segmentation");
+          }
+        } catch (e) {
+          prodInstruction += `<em>⚠️ Erreur de lecture des templates</em><br><br>`;
+          console.error("[ERREUR] Impossible de parser les templates :", e, templatesRaw);
+        }
+
+        prodInstruction += `
+          Une fois le crawl terminé, accédez à l'onglet <strong>Interne</strong> &gt; <strong>Exporter</strong> &gt; <strong>Enregistrer en CSV</strong>
+        `;
+        document.getElementById('prodInstructions').innerHTML = prodInstruction;
+
+        let preprodInstruction = `
+          Lancer un crawl de <strong>${urlPreprod}</strong> en mode Spider.<br>
+          Configuration à utiliser : <code>CahierDesChargesPreprod.seospiderconfig</code><br><br>
+        `;
+
+        try {
+          const templates = JSON.parse(templatesRaw);
+          if (Array.isArray(templates) && templates.length > 0) {
+            const noms = templates.map(t => `– ${t.nom}`).join('<br>');
+            preprodInstruction += `Segmenter le crawl avec les templates :<br>${noms}<br><br>`;
+            console.log("[DEBUG] Templates Préprod parsés avec succès :", noms);
+          } else {
+            preprodInstruction += `<em>⚠️ Aucun template défini pour la segmentation</em><br><br>`;
+            console.warn("[WARN] Aucun template défini pour la segmentation (préprod)");
+          }
+        } catch (e) {
+          preprodInstruction += `<em>⚠️ Erreur de lecture des templates</em><br><br>`;
+          console.error("[ERREUR] Impossible de parser les templates pour Préprod :", e, templatesRaw);
+        }
+
+        preprodInstruction += `
+          Une fois le crawl terminé, accédez à l'onglet <strong>Interne</strong> &gt; <strong>Exporter</strong> &gt; <strong>Enregistrer en CSV</strong>
+        `;
+        document.getElementById('preprodInstructions').innerHTML = preprodInstruction;
+
+        const stratInstruction = `
+          Importer la stratégie de positionnement du client en indiquant l'URL de celle-ci.
+        `;
+        document.getElementById('stratInstructions').innerHTML = stratInstruction;
+
+         // Construction du lien Semrush AVEC le vrai domaine récupéré
+    const semrushLink =
+      "https://fr.semrush.com/analytics/organic/positions/?" +
+      "sortField=&sortDirection=desc&filter=%7B%22search%22%3A%22%22%2C%22volume%22%3A%22%22%2C%22positions%22%3A%22%22%2C%22positionsType%22%3A%22organic%22%2C%22serpFeatures%22%3A%22%22%2C%22intent%22%3A%22%22%2C%22intentPositions%22%3A%22%22%2C%22kd%22%3A%22%22%2C%22advanced%22%3A%7B%7D%7D&db=fr&q="
+      + encodeURIComponent(urlActuel) +
+      "&searchType=domain";
+
+    const semrushInstruction = `
+      Importer le positionnement actuel du client :<br>
+      <a href="${semrushLink}" target="_blank">🔗 Voir les positions organiques</a>
+    `;
+    document.getElementById('semrushInstructions').innerHTML = semrushInstruction;
+  }).getDocumentProperties();
+  } catch (ex) {
+    // Log en cas de plantage inattendu JS
+    console.error("[ERREUR] Exception non capturée dans chargerInstructionsDynamiques :", ex);
+  }
+}
+window.onload = chargerInstructionsDynamiques;
+</script>
+
+</body>
+</html>
