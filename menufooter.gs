@@ -202,6 +202,38 @@ function formatMenuFooterSheet(sheet, bandingRangesInfo) {
       }
     });
 
+
+    // --- DÉBUT DE L'AJOUT : Application des bordures de séparation ---
+
+    const firstColumnValues = sheet.getRange("A1:A" + lastRow).getValues();
+
+    for (let i = 1; i < firstColumnValues.length; i++) {
+      const currentValue = firstColumnValues[i][0];
+      const previousValue = firstColumnValues[i - 1][0];
+
+      if (currentValue !== previousValue) {
+        const previousCell = sheet.getRange(i, 1); 
+        
+        // CORRECTION : La bonne méthode est isPartOfMerge() et non isMerged()
+        if (!previousCell.isPartOfMerge()) {
+          const rangeToBorder = sheet.getRange(i, 1, 1, 5);
+          rangeToBorder.setBorder(null, null, true, null, false, false, "#000000", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);
+        }
+      }
+    }
+
+    // Ajoute une bordure à la toute dernière ligne de données si elle n'est pas fusionnée
+    if (lastRow > 0) {
+        // CORRECTION : La bonne méthode est isPartOfMerge() et non isMerged()
+        if (!sheet.getRange(lastRow, 1).isPartOfMerge()) {
+            const lastRowRange = sheet.getRange(lastRow, 1, 1, 5);
+            lastRowRange.setBorder(null, null, true, null, false, false, "#000000", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);
+        }
+    }
+
+    // --- FIN DE L'AJOUT ---
+
+
     // Définition de la largeur des colonnes
     sheet.setColumnWidth(1, 200); // A
     sheet.setColumnWidth(2, 100); // B
