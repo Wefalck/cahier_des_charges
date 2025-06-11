@@ -439,7 +439,6 @@ function importerStrategiePositionnement(url) {
     Logger.log("❌ Erreur dans importerStrategiePositionnement : " + error.message);
     throw error;
   }
-
 }
 
 function importerDonneesSemrush(donnees) {
