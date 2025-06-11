@@ -63,9 +63,9 @@ function getArborescenceForMenuFooter() {
 
 function createMenuFooter(data) {
   /*
-   * Crée ou met à jour la feuille "Menu & Footer" avec les données structurées
-   * du menu et du footer, en appliquant un formatage spécifique.
-   */
+  * Crée ou met à jour la feuille "Menu & Footer" avec les données structurées
+  * du menu et du footer, en appliquant un formatage spécifique.
+  */
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     let sheet = ss.getSheetByName("Menu & Footer");
@@ -111,7 +111,7 @@ function createMenuFooter(data) {
       finalRows.push(['Entrée', 'Niveau', 'Libellé', 'URL', 'Note']);
       finalRows = finalRows.concat(footerRows);
       const endDataRow = finalRows.length;
-       if (columnHeaderRowIndex <= endDataRow) {
+        if (columnHeaderRowIndex <= endDataRow) {
         bandingRangesInfo.push({ start: columnHeaderRowIndex, end: endDataRow });
       }
     }
@@ -121,6 +121,13 @@ function createMenuFooter(data) {
       formatMenuFooterSheet(sheet, bandingRangesInfo);
       cleanupSheet(sheet, 5);
     }
+
+    // --- MISE À JOUR ---
+    // Ajout du lien dans la feuille "Suivi" une fois que tout est terminé.
+    if (sheet) {
+      ajouterLienSuiviVersMenuFooter(ss, sheet);
+    }
+    // --- FIN DE LA MISE À JOUR ---
 
   } catch (e) {
     Logger.log('Erreur dans createMenuFooter: ' + e.message + ' Stack: ' + e.stack);
@@ -271,4 +278,36 @@ function getInitialMenuFooterData() {
     arboPages: arboPages,
     savedState: savedState
   };
+}
+
+function ajouterLienSuiviVersMenuFooter(ss, feuilleMenuFooter) {
+  try {
+    const feuilleSuivi = ss.getSheetByName("Suivi");
+    if (!feuilleSuivi) {
+      Logger.log("[ajouterLienSuiviVersMenuFooter] Feuille Suivi introuvable.");
+      return;
+    }
+    const lastRow = feuilleSuivi.getLastRow();
+    const valeursColB = feuilleSuivi.getRange(1, 2, lastRow).getValues().flat();
+    const gidMenuFooter = feuilleMenuFooter.getSheetId(); // Modifié
+    let liensAjoutes = 0;
+
+    for (let i = 0; i < valeursColB.length; i++) {
+      // Modifié : recherche "menu & footer" au lieu de "arborescence"
+      if (typeof valeursColB[i] === "string" && valeursColB[i].trim().toLowerCase() === "menu & footer") {
+        
+        // Colonne F = colonne 6 (inchangé)
+        // Modifié : le texte du lien est "Menu & Footer"
+        const formuleLien = `=HYPERLINK("#gid=${gidMenuFooter}";"Menu & Footer")`; 
+        feuilleSuivi.getRange(i + 1, 6).setFormula(formuleLien);
+        liensAjoutes++;
+        
+        // Modifié : log pour cette fonction spécifique
+        Logger.log(`[ajouterLienSuiviVersMenuFooter] Lien ajouté en Suivi!F${i + 1}`);
+      }
+    }
+    Logger.log(`[ajouterLienSuiviVersMenuFooter] ${liensAjoutes} lien(s) ajoutés`);
+  } catch (e) {
+    Logger.log(`[ajouterLienSuiviVersMenuFooter] Erreur : ${e.message}`);
+  }
 }
